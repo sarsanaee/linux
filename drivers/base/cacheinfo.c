@@ -83,7 +83,27 @@ bool last_level_cache_is_shared(unsigned int cpu_x, unsigned int cpu_y)
 
 #ifdef CONFIG_OF
 
-static bool of_check_cache_nodes(struct device_node *np);
+static bool of_check_cache_node(struct device_node *np) {
+	if (of_property_present(np, "cache-size")   ||
+	    of_property_present(np, "i-cache-size") ||
+	    of_property_present(np, "d-cache-size") ||
+	    of_property_present(np, "cache-unified"))
+		return true;
+	return false;
+}
+
+static bool of_check_cache_nodes(struct device_node *np)
+{
+	if (of_check_cache_node(np))
+		return true;
+
+	struct device_node *next __free(device_node) = of_find_next_cache_node(np);
+	if (next)
+		return true;
+
+	return false;
+}
+
 
 /* OF properties to query for a given cache type */
 struct cache_type_info {
@@ -218,11 +238,23 @@ static int cache_setup_of_node(unsigned int cpu)
 	while (index < cache_leaves(cpu)) {
 		this_leaf = per_cpu_cacheinfo_idx(cpu, index);
 		if (this_leaf->level != 1) {
+			/* Always go one level down for level > 1 */
 			struct device_node *prev __free(device_node) = np;
 			np = of_find_next_cache_node(np);
 			if (!np)
 				break;
+		} else {
+			/* For level 1, check compatibility */
+			if (!of_device_is_compatible(np, "cache") &&
+			    !of_check_cache_node(np)) {
+				struct device_node *prev __free(device_node) = np;
+				np = of_find_next_cache_node(np);
+				if (!np)
+					break;
+				continue; /* Skip to next index without processing */
+			}
 		}
+
 		cache_of_set_props(this_leaf, np);
 		this_leaf->fw_token = np;
 		index++;
@@ -232,22 +264,6 @@ static int cache_setup_of_node(unsigned int cpu)
 		return -ENOENT;
 
 	return 0;
-}
-
-static bool of_check_cache_nodes(struct device_node *np)
-{
-	if (of_property_present(np, "cache-size")   ||
-	    of_property_present(np, "i-cache-size") ||
-	    of_property_present(np, "d-cache-size") ||
-	    of_property_present(np, "cache-unified"))
-		return true;
-
-	struct device_node *next __free(device_node) = of_find_next_cache_node(np);
-	if (next) {
-		return true;
-	}
-
-	return false;
 }
 
 static int of_count_cache_leaves(struct device_node *np)
