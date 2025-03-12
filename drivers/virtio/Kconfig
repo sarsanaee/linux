@@ -188,4 +188,11 @@ config VIRTIO_DEBUG
 
 	  If unsure, say N.
 
+config VIRTIO_TAG
+    bool "Virtio-Tag Device"
+    depends on PCI && VIRTIO
+    help
+      Enables support for the Virtio-Tag device, which allows passing
+      tag values from QEMU to the guest.
+
 endif # VIRTIO_MENU
