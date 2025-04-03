@@ -148,6 +148,36 @@ struct device_node *of_cpu_device_node_get(int cpu)
 EXPORT_SYMBOL(of_cpu_device_node_get);
 
 /**
+ * of_threaded_cpu_node_to_id: Get the logical CPU number for a given
+ * device_node
+ *
+ * @cpu_node: Pointer to the device_node for CPU.
+ * @index: Thread index to find within local threads of CPU.
+ *
+ * Return: The logical CPU number of the given CPU device_node or -ENODEV if the
+ * CPU is not found.
+ */
+int of_threaded_cpu_node_to_id(struct device_node *cpu_node, uint32_t index)
+{
+	int cpu;
+	bool found = false;
+	uint32_t local_thread;
+	struct device_node *np;
+
+	for_each_possible_cpu(cpu) {
+		np = of_get_cpu_node(cpu, &local_thread);
+		found = (cpu_node == np) && (local_thread == index);
+		of_node_put(np);
+		if (found) {
+			return cpu;
+		}
+	}
+
+	return -ENODEV;
+}
+EXPORT_SYMBOL(of_threaded_cpu_node_to_id);
+
+/**
  * of_cpu_node_to_id: Get the logical CPU number for a given device_node
  *
  * @cpu_node: Pointer to the device_node for CPU.

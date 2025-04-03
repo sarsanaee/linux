@@ -519,19 +519,28 @@ core_initcall(free_raw_capacity);
 static int __init get_cpu_for_node(struct device_node *node)
 {
 	int cpu;
-	struct device_node *cpu_node __free(device_node) =
-		of_parse_phandle(node, "cpu", 0);
+	struct of_phandle_args args;
+	int ret;
+	int thread_index = 0;
 
-	if (!cpu_node)
+	ret = of_parse_phandle_with_args(node, "cpu", "#phandle-cells",
+					 0, &args);
+
+	if (ret < 0) {
 		return -1;
+	}
 
-	cpu = of_cpu_node_to_id(cpu_node);
+	if (args.args_count == 1)
+		thread_index = args.args[0];
+
+	cpu = of_threaded_cpu_node_to_id(args.np, thread_index);
 	if (cpu >= 0)
-		topology_parse_cpu_capacity(cpu_node, cpu);
+		topology_parse_cpu_capacity(args.np, cpu);
 	else
 		pr_info("CPU node for %pOF exist but the possible cpu range is :%*pbl\n",
-			cpu_node, cpumask_pr_args(cpu_possible_mask));
+			args.np, cpumask_pr_args(cpu_possible_mask));
 
+	of_node_put(args.np);
 	return cpu;
 }
 
