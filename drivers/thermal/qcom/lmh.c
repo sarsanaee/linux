@@ -116,7 +116,7 @@ static int lmh_probe(struct platform_device *pdev)
 	cpu_node = of_parse_phandle(np, "cpus", 0);
 	if (!cpu_node)
 		return -EINVAL;
-	cpu_id = of_cpu_node_to_id(cpu_node);
+	cpu_id = of_cpu_node_to_id(cpu_node, 0);
 	of_node_put(cpu_node);
 
 	ret = of_property_read_u32(np, "qcom,lmh-temp-high-millicelsius", &temp_high);

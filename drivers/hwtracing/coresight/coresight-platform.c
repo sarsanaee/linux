@@ -168,17 +168,29 @@ of_coresight_get_output_ports_node(const struct device_node *node)
 static int of_coresight_get_cpu(struct device *dev)
 {
 	int cpu;
-	struct device_node *dn;
+	int thread_index;
+	int ret;
+	struct of_phandle_args args;
+
 
 	if (!dev->of_node)
 		return -ENODEV;
 
-	dn = of_parse_phandle(dev->of_node, "cpu", 0);
-	if (!dn)
-		return -ENODEV;
+	ret = of_parse_phandle_with_args(dev->of_node, "cpu", "#cpu-cells", 0,
+					 &args);
 
-	cpu = of_cpu_node_to_id(dn);
-	of_node_put(dn);
+	if (ret < 0) {
+		ret = of_parse_phandle_with_args(dev->of_node, "cpu",
+						 NULL,
+					 	 0, &args);
+		if (ret < 0)
+			return -ENODEV;
+	}
+
+	thread_index = args.args_count == 1 ? args.args[0] : 0;
+
+	cpu = of_cpu_node_to_id(args.np, thread_index);
+	of_node_put(args.np);
 
 	return cpu;
 }

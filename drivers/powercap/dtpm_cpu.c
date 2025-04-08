@@ -258,7 +258,7 @@ static int dtpm_cpu_setup(struct dtpm *dtpm, struct device_node *np)
 {
 	int cpu;
 
-	cpu = of_cpu_node_to_id(np);
+	cpu = of_cpu_node_to_id(np, 0);
 	if (cpu < 0)
 		return 0;
 

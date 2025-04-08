@@ -909,19 +909,30 @@ static void build_fiq_affinity(struct aic_irq_chip *ic, struct device_node *aff)
 		return;
 
 	for (i = 0; i < n; i++) {
-		struct device_node *cpu_node;
-		u32 cpu_phandle;
+		struct of_phandle_args args;
 		int cpu;
+		int ret;
+		int thread_index;
 
-		if (of_property_read_u32_index(aff, "cpus", i, &cpu_phandle))
+		ret = of_parse_phandle_with_args(aff, "cpus",
+						 "#cpu-cells",
+						 i, &args);
+
+		if (ret < 0) {
+			ret = of_parse_phandle_with_args(aff, "cpus",
+							 NULL,
+						 	 i, &args);
+			if (ret < 0)
+				continue;
+		}
+
+		if (WARN_ON(!args.np))
 			continue;
 
-		cpu_node = of_find_node_by_phandle(cpu_phandle);
-		if (WARN_ON(!cpu_node))
-			continue;
+		thread_index = args.args_count == 1 ? args.args[0] : 0;
 
-		cpu = of_cpu_node_to_id(cpu_node);
-		of_node_put(cpu_node);
+		cpu = of_cpu_node_to_id(args.np, 0);
+		of_node_put(args.np);
 		if (WARN_ON(cpu < 0))
 			continue;
 
