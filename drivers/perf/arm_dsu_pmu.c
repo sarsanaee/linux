@@ -590,18 +590,28 @@ static struct dsu_pmu *dsu_pmu_alloc(struct platform_device *pdev)
  */
 static int dsu_pmu_dt_get_cpus(struct device *dev, cpumask_t *mask)
 {
-	int i = 0, n, cpu;
-	struct device_node *cpu_node;
+	int i = 0, n, cpu, ret, thread_index;
+	struct of_phandle_args args;
 
 	n = of_count_phandle_with_args(dev->of_node, "cpus", NULL);
 	if (n <= 0)
 		return -ENODEV;
 	for (; i < n; i++) {
-		cpu_node = of_parse_phandle(dev->of_node, "cpus", i);
-		if (!cpu_node)
-			break;
-		cpu = of_cpu_node_to_id(cpu_node, 0);
-		of_node_put(cpu_node);
+		ret = of_parse_phandle_with_args(dev->of_node, "cpus",
+						 "#cpu-cell", i, &args);
+
+		if (ret < 0) {
+			ret = of_parse_phandle_with_args(dev->of_node, "cpus",
+							 NULL, i, &args);
+
+			if (ret < 0)
+				break;
+		}
+
+		thread_index = args.args_count == 1 ? args.args[0] : 0;
+
+		cpu = of_cpu_node_to_id(args.np, thread_index);
+		of_node_put(args.np);
 		/*
 		 * We have to ignore the failures here and continue scanning
 		 * the list to handle cases where the nr_cpus could be capped

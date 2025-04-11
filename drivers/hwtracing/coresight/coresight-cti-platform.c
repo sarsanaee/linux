@@ -42,17 +42,27 @@
 static int of_cti_get_cpu_at_node(const struct device_node *node)
 {
 	int cpu;
-	struct device_node *dn;
+	struct of_phandle_args args;
+	int thread_index;
+	int ret;
 
 	if (node == NULL)
 		return -1;
 
-	dn = of_parse_phandle(node, "cpu", 0);
-	/* CTI affinity defaults to no cpu */
-	if (!dn)
-		return -1;
-	cpu = of_cpu_node_to_id(dn, 0);
-	of_node_put(dn);
+	ret = of_parse_phandle_with_args(node, "cpu", "#cpu-cells", 0, &args);
+
+	if (ret < 0) {
+		ret = of_parse_phandle_with_args(node, "cpu",
+						 NULL,
+					 	 0, &args);
+		if (ret < 0)
+			return -1;
+	}
+
+	thread_index = args.args_count == 1 ? args.args[0] : 0;
+
+	cpu = of_cpu_node_to_id(args.np, thread_index);
+	of_node_put(args.np);
 
 	/* No Affinity  if no cpu nodes are found */
 	return (cpu < 0) ? -1 : cpu;

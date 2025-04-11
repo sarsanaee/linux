@@ -64,8 +64,8 @@ static bool pmu_has_irq_affinity(struct device_node *node)
 
 static int pmu_parse_irq_affinity(struct device *dev, int i)
 {
-	struct device_node *dn;
-	int cpu;
+	int cpu, thread_index, ret;
+	struct of_phandle_args args;
 
 	/*
 	 * If we don't have an interrupt-affinity property, we guess irq
@@ -75,19 +75,31 @@ static int pmu_parse_irq_affinity(struct device *dev, int i)
 	if (!pmu_has_irq_affinity(dev->of_node))
 		return i;
 
-	dn = of_parse_phandle(dev->of_node, "interrupt-affinity", i);
-	if (!dn) {
-		dev_warn(dev, "failed to parse interrupt-affinity[%d]\n", i);
-		return -EINVAL;
+	ret = of_parse_phandle_with_args(dev->of_node, "interrupt-affinity",
+					 "#cpu-cells", i,
+					 &args);
+
+	if (ret < 0) {
+		ret = of_parse_phandle_with_args(dev->of_node,
+					  	 "interrupt-affinity",
+						 NULL,
+					 	 i, &args);
+		if (ret < 0) {
+			dev_warn(dev, "failed to parse interrupt-affinity[%d]\n", i);
+			return -ENODEV;
+		}
 	}
 
-	cpu = of_cpu_node_to_id(dn, 0);
+	thread_index = args.args_count == 1 ? args.args[0] : 0;
+
+	cpu = of_cpu_node_to_id(args.np, thread_index);
 	if (cpu < 0) {
-		dev_warn(dev, "failed to find logical CPU for %pOFn\n", dn);
+		dev_warn(dev, "failed to find logical CPU for %pOFn\n",
+			 args.np);
 		cpu = nr_cpu_ids;
 	}
 
-	of_node_put(dn);
+	of_node_put(args.np);
 
 	return cpu;
 }

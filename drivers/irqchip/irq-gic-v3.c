@@ -2202,29 +2202,35 @@ static void __init gic_populate_ppi_partitions(struct device_node *gic_node)
 		WARN_ON(n <= 0);
 
 		for (i = 0; i < n; i++) {
-			int err, cpu;
-			u32 cpu_phandle;
-			struct device_node *cpu_node;
+			int cpu, ret, thread_index;
+			struct of_phandle_args args;
 
-			err = of_property_read_u32_index(child_part, "affinity",
-							 i, &cpu_phandle);
-			if (WARN_ON(err))
-				continue;
+			ret = of_parse_phandle_with_args(child_part, "cpus",
+							 "#cpu-cells",
+							 i, &args);
 
-			cpu_node = of_find_node_by_phandle(cpu_phandle);
-			if (WARN_ON(!cpu_node))
-				continue;
+			if (ret < 0) {
+				ret = of_parse_phandle_with_args(child_part,
+								 "cpus",
+							         NULL,
+						 	         i, &args);
+				if (ret < 0) {
+					WARN_ON(ret);
+					continue;
+				}
+			}
 
-			cpu = of_cpu_node_to_id(cpu_node, 0);
+			thread_index = args.args_count == 1 ? args.args[0] : 0;
+			cpu = of_cpu_node_to_id(args.np, thread_index);
 			if (WARN_ON(cpu < 0)) {
-				of_node_put(cpu_node);
+				of_node_put(args.np);
 				continue;
 			}
 
-			pr_cont("%pOF[%d] ", cpu_node, cpu);
+			pr_cont("%pOF[%d] ", args.np, cpu);
 
 			cpumask_set_cpu(cpu, &part->mask);
-			of_node_put(cpu_node);
+			of_node_put(args.np);
 		}
 
 		pr_cont("}\n");

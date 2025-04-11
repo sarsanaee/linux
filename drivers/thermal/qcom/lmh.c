@@ -98,7 +98,8 @@ static int lmh_probe(struct platform_device *pdev)
 	struct device_node *np = dev->of_node;
 	struct device_node *cpu_node;
 	struct lmh_hw_data *lmh_data;
-	int temp_low, temp_high, temp_arm, cpu_id, ret;
+	struct of_phandle_args args;
+	int temp_low, temp_high, temp_arm, cpu_id, ret, thread_index;
 	unsigned int enable_alg;
 	u32 node_id;
 
@@ -118,6 +119,22 @@ static int lmh_probe(struct platform_device *pdev)
 		return -EINVAL;
 	cpu_id = of_cpu_node_to_id(cpu_node, 0);
 	of_node_put(cpu_node);
+
+	ret = of_parse_phandle_with_args(np, "cpus",
+					 "#cpu-cells",
+					 0, &args);
+
+	if (ret < 0) {
+		ret = of_parse_phandle_with_args(np, "cpus",
+						 NULL,
+					 	 0, &args);
+		if (ret < 0)
+			return -EINVAL;
+	}
+
+	thread_index = args.args_count == 1 ? args.args[0] : 0;
+	cpu_id = of_cpu_node_to_id(args.np, thread_index);
+	of_node_put(args.np);
 
 	ret = of_property_read_u32(np, "qcom,lmh-temp-high-millicelsius", &temp_high);
 	if (ret) {
