@@ -151,19 +151,21 @@ EXPORT_SYMBOL(of_cpu_device_node_get);
  * of_cpu_node_to_id: Get the logical CPU number for a given device_node
  *
  * @cpu_node: Pointer to the device_node for CPU.
+ * @thread: Local thread number within the physical core.
  *
  * Return: The logical CPU number of the given CPU device_node or -ENODEV if the
  * CPU is not found.
  */
-int of_cpu_node_to_id(struct device_node *cpu_node)
+int of_cpu_node_to_id(struct device_node *cpu_node, int thread)
 {
 	int cpu;
 	bool found = false;
+	uint32_t local_thread;
 	struct device_node *np;
 
 	for_each_possible_cpu(cpu) {
-		np = of_cpu_device_node_get(cpu);
-		found = (cpu_node == np);
+		np = of_get_cpu_node(cpu, &local_thread);
+		found = (cpu_node == np) && (local_thread == thread);
 		of_node_put(np);
 		if (found)
 			return cpu;

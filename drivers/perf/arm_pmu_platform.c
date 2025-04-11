@@ -81,7 +81,7 @@ static int pmu_parse_irq_affinity(struct device *dev, int i)
 		return -EINVAL;
 	}
 
-	cpu = of_cpu_node_to_id(dn);
+	cpu = of_cpu_node_to_id(dn, 0);
 	if (cpu < 0) {
 		dev_warn(dev, "failed to find logical CPU for %pOFn\n", dn);
 		cpu = nr_cpu_ids;

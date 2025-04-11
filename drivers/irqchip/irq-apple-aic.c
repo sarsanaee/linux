@@ -920,7 +920,7 @@ static void build_fiq_affinity(struct aic_irq_chip *ic, struct device_node *aff)
 		if (WARN_ON(!cpu_node))
 			continue;
 
-		cpu = of_cpu_node_to_id(cpu_node);
+		cpu = of_cpu_node_to_id(cpu_node, 0);
 		of_node_put(cpu_node);
 		if (WARN_ON(cpu < 0))
 			continue;

@@ -177,7 +177,7 @@ static int of_coresight_get_cpu(struct device *dev)
 	if (!dn)
 		return -ENODEV;
 
-	cpu = of_cpu_node_to_id(dn);
+	cpu = of_cpu_node_to_id(dn, 0);
 	of_node_put(dn);
 
 	return cpu;

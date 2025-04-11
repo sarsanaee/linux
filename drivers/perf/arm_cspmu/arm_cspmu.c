@@ -1150,7 +1150,7 @@ static int arm_cspmu_of_get_cpus(struct arm_cspmu *cspmu)
 	int ret, cpu;
 
 	of_for_each_phandle(&it, ret, dev_of_node(cspmu->dev), "cpus", NULL, 0) {
-		cpu = of_cpu_node_to_id(it.node);
+		cpu = of_cpu_node_to_id(it.node, 0);
 		if (cpu < 0)
 			continue;
 		cpumask_set_cpu(cpu, &cspmu->associated_cpus);

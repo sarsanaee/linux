@@ -51,7 +51,7 @@ static int of_cti_get_cpu_at_node(const struct device_node *node)
 	/* CTI affinity defaults to no cpu */
 	if (!dn)
 		return -1;
-	cpu = of_cpu_node_to_id(dn);
+	cpu = of_cpu_node_to_id(dn, 0);
 	of_node_put(dn);
 
 	/* No Affinity  if no cpu nodes are found */

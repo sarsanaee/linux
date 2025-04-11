@@ -525,7 +525,7 @@ static int __init get_cpu_for_node(struct device_node *node)
 	if (!cpu_node)
 		return -1;
 
-	cpu = of_cpu_node_to_id(cpu_node);
+	cpu = of_cpu_node_to_id(cpu_node, 0);
 	if (cpu >= 0)
 		topology_parse_cpu_capacity(cpu_node, cpu);
 	else

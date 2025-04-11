@@ -220,7 +220,7 @@ static void apmu_parse_dt(void (*fn)(struct resource *res, int cpu, int bit))
 			np_cpu = of_parse_phandle(np_apmu, "cpus", bit);
 			if (!np_cpu)
 				break;
-			if (of_cpu_node_to_id(np_cpu) == 0) {
+			if (of_cpu_node_to_id(np_cpu, 0) == 0) {
 				is_allowed = true;
 				of_node_put(np_cpu);
 				break;
@@ -235,7 +235,7 @@ static void apmu_parse_dt(void (*fn)(struct resource *res, int cpu, int bit))
 			if (!np_cpu)
 				break;
 
-			index = of_cpu_node_to_id(np_cpu);
+			index = of_cpu_node_to_id(np_cpu, 0);
 			if ((index >= 0) &&
 			    !of_address_to_resource(np_apmu, 0, &res))
 				fn(&res, index, bit);
