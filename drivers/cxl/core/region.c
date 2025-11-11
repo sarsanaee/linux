@@ -707,6 +707,8 @@ static ssize_t size_store(struct device *dev, struct device_attribute *attr,
 	u64 val;
 	int rc;
 
+	printk("size !!!!!\n");
+
 	rc = kstrtou64(buf, 0, &val);
 	if (rc)
 		return rc;

@@ -952,12 +952,12 @@ static int cxl_validate_extent(struct cxl_memdev_state *mds,
 		return -ENXIO;
 	}
 
-	if (!uuid_is_null((const uuid_t *)extent->uuid)) {
-		dev_err_ratelimited(dev,
-				    "DC extent DPA %pra (%pU); tags not supported\n",
-				    &ext_range, extent->uuid);
-		return -ENXIO;
-	}
+	// if (!uuid_is_null((const uuid_t *)extent->uuid)) {
+	// 	dev_err_ratelimited(dev,
+	// 			    "DC extent DPA %pra (%pU); tags not supported\n",
+	// 			    &ext_range, extent->uuid);
+	// 	return -ENXIO;
+	// }
 
 	/* Extents must be within the DC partition boundary */
 	for (int i = 0; i < cxlds->nr_partitions; i++) {
